@@ -18,4 +18,10 @@
     <Using Include="Xunit" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\TrezzeCloud.Users.Application\TrezzeCloud.Users.Application.csproj" />
+    <ProjectReference Include="..\..\src\TrezzeCloud.Users.Domain\TrezzeCloud.Users.Domain.csproj" />
+    <ProjectReference Include="..\..\src\TrezzeCloud.Users.Identity\TrezzeCloud.Users.Identity.csproj" />
+  </ItemGroup>
+
 </Project>

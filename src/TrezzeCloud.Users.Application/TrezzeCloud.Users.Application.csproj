@@ -1,5 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+  <ItemGroup>
+    <ProjectReference Include="..\TrezzeCloud.Users.Domain\TrezzeCloud.Users.Domain.csproj" />
+    <ProjectReference Include="..\TrezzeCloud.Contracts\TrezzeCloud.Contracts.csproj" />
+  </ItemGroup>
+
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>

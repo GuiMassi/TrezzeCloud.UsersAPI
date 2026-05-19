@@ -7,7 +7,19 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="MassTransit" Version="9.1.1" />
+    <PackageReference Include="MassTransit.RabbitMQ" Version="9.1.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.8" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.8" />
+    <PackageReference Include="Scalar.AspNetCore" Version="2.14.14" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="10.1.7" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\TrezzeCloud.Users.Application\TrezzeCloud.Users.Application.csproj" />
+    <ProjectReference Include="..\TrezzeCloud.Users.Infrastructure\TrezzeCloud.Users.Infrastructure.csproj" />
+    <ProjectReference Include="..\TrezzeCloud.Contracts\TrezzeCloud.Contracts.csproj" />
+    <ProjectReference Include="..\TrezzeCloud.Users.Identity\TrezzeCloud.Users.Identity.csproj" />
   </ItemGroup>
 
 </Project>
