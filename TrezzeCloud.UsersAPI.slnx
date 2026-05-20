@@ -1,1 +1,13 @@
-<Solution />
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/TrezzeCloud.Contracts/TrezzeCloud.Contracts.csproj" Id="4b9d1740-c034-4c4b-ae91-e7241f5f71fd" />
+    <Project Path="src/TrezzeCloud.Users.Api/TrezzeCloud.Users.Api.csproj" Id="4dd3f11d-5678-482c-8624-618922d9ce66" />
+    <Project Path="src/TrezzeCloud.Users.Application/TrezzeCloud.Users.Application.csproj" Id="adbb8908-7af2-4d26-ba51-74bb3c5ba708" />
+    <Project Path="src/TrezzeCloud.Users.Domain/TrezzeCloud.Users.Domain.csproj" Id="b48eadb4-6e07-4406-9cd2-8caf56a33b13" />
+    <Project Path="src/TrezzeCloud.Users.Identity/TrezzeCloud.Users.Identity.csproj" />
+    <Project Path="src/TrezzeCloud.Users.Infrastructure/TrezzeCloud.Users.Infrastructure.csproj" Id="6a892223-08a9-4583-a1d6-50ea94efc9af" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/TrezzeCloud.Users.Tests/TrezzeCloud.Users.Tests.csproj" Id="4c08ee8e-7f87-4f66-a968-bb728b0a748e" />
+  </Folder>
+</Solution>
