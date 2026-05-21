@@ -9,5 +9,6 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/TrezzeCloud.Users.Tests/TrezzeCloud.Users.Tests.csproj" Id="4c08ee8e-7f87-4f66-a968-bb728b0a748e" />
+    <Project Path="tests/TrezzeCloud.Users.UnitTests/TrezzeCloud.Users.UnitTests.csproj" />
   </Folder>
 </Solution>
