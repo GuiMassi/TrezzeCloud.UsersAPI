@@ -24,7 +24,11 @@ public static class DependencyInjection
         services.AddDbContext<UsersIdentityDbContext>(options =>
         {
             options.UseSqlServer(
-                configuration.GetConnectionString("UsersDatabase"));
+                configuration.GetConnectionString("UsersDatabase"),
+                sqlOptions =>
+                {
+                    sqlOptions.EnableRetryOnFailure(10, TimeSpan.FromSeconds(5), null);
+                });
         });
 
         services.Configure<AdminUserOptions>(
@@ -54,6 +58,25 @@ public static class DependencyInjection
     public static async Task SeedIdentityAsync(IServiceProvider serviceProvider)
     {
         using var scope = serviceProvider.CreateScope();
+
+        var dbContext = scope.ServiceProvider
+            .GetRequiredService<UsersIdentityDbContext>();
+
+        // SQL Server container can accept TCP before database login is fully ready.
+        // Apply migrations with retries so startup does not fail on transient boot timing.
+        const int maxAttempts = 10;
+        for (var attempt = 1; attempt <= maxAttempts; attempt++)
+        {
+            try
+            {
+                await dbContext.Database.MigrateAsync();
+                break;
+            }
+            catch when (attempt < maxAttempts)
+            {
+                await Task.Delay(TimeSpan.FromSeconds(3));
+            }
+        }
 
         var roleManager = scope.ServiceProvider
             .GetRequiredService<RoleManager<IdentityRole<Guid>>>();
