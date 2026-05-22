@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using TrezzeCloud.Users.Application.Abstractions;
 using TrezzeCloud.Users.Application.DTOs;
 using MassTransit;
@@ -43,5 +44,35 @@ public sealed class UserController : ControllerBase
         var response = await _identityService.LoginAsync(request);
 
         return Ok(response);
+    }
+
+    [HttpPost("refresh-login")]
+    public async Task<IActionResult> RefreshLogin(
+        RefreshLoginRequest request)
+    {
+        var response = await _identityService.RefreshLoginAsync(request);
+
+        return Ok(response);
+    }
+
+    [Authorize(Roles = "Admin")]
+    [HttpGet]
+    public async Task<IActionResult> GetUsers()
+    {
+        var users = await _identityService.GetUsersAsync();
+
+        return Ok(users);
+    }
+
+    [Authorize(Roles = "Admin")]
+    [HttpGet("{id:guid}")]
+    public async Task<IActionResult> GetUserById(Guid id)
+    {
+        var user = await _identityService.GetUserByIdAsync(id);
+
+        if (user is null)
+            return NotFound();
+
+        return Ok(user);
     }
 }

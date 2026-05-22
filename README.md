@@ -1,6 +1,3 @@
-# README - UsersAPI
-
-```md
 # TrezzeCloud.UsersAPI
 
 Microsserviço responsável pelo gerenciamento de usuários da plataforma.
@@ -16,7 +13,7 @@ Microsserviço responsável pelo gerenciamento de usuários da plataforma.
 
 ---
 
-# Tecnologias
+## Tecnologias
 
 - .NET 10
 - ASP.NET Core
@@ -30,7 +27,7 @@ Microsserviço responsável pelo gerenciamento de usuários da plataforma.
 
 ---
 
-# Variáveis de Ambiente
+## Variáveis de Ambiente
 
 | Variável | Descrição |
 |---|---|
@@ -44,20 +41,48 @@ Microsserviço responsável pelo gerenciamento de usuários da plataforma.
 | AdminUser__Name | Nome admin |
 | AdminUser__Email | Email admin |
 | AdminUser__Password | Senha admin |
+| TestUser__Id | Id fixo do usuário teste |
+| TestUser__Name | Nome usuário teste |
+| TestUser__Email | Email usuário teste |
+| TestUser__Password | Senha usuário teste |
 
 ---
 
-# Executar Localmente
+## Usuários Seed (Desenvolvimento)
+
+O serviço cria automaticamente os usuários de seed no startup.
+
+### Admin
+
+- Name: TrezzeCloud Admin
+- Email: admin@trezzecloud.com
+- Password (dev/local): Admin@123
+
+### Teste (compartilhado com CatalogAPI)
+
+- Id: aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa
+- Name: Usuario Teste
+- Email: teste@trezzecloud.com
+- Password (dev/local): Teste@123
+
+### Segurança
+
+- Nunca use essas credenciais padrão em produção.
+- Em ambientes não locais, sobrescreva os valores via variáveis de ambiente e secret manager.
+
+---
+
+## Executar Localmente
 
 ```bash
 dotnet restore
 dotnet ef database update
 dotnet run
-````
+```
 
 ---
 
-# Docker
+## Docker
 
 ```bash
 docker build -t trezzecloud-users-api .
@@ -65,14 +90,12 @@ docker build -t trezzecloud-users-api .
 
 ---
 
-# Kubernetes
+## Kubernetes
 
 Manifestos disponíveis em:
 
 ```txt
 k8s/users-api
 ```
-
-````
 
 ---

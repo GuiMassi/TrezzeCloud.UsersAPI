@@ -185,6 +185,51 @@ public sealed class IdentityServiceTests
             .WithMessage("*inválidos*");
     }
 
+    [Fact]
+    public async Task Should_Refresh_Login_With_Valid_Refresh_Token()
+    {
+        var userManagerMock = CreateUserManagerMock();
+        var signInManagerMock = CreateSignInManagerMock(userManagerMock.Object);
+        var jwtOptions = CreateJwtOptions();
+
+        ApplicationUser? createdUser = null;
+
+        userManagerMock
+            .Setup(x => x.FindByEmailAsync("jane.refresh@trezze.com"))
+            .ReturnsAsync((ApplicationUser?)null);
+
+        userManagerMock
+            .Setup(x => x.CreateAsync(It.IsAny<ApplicationUser>(), "Str0ng@Pass"))
+            .Callback<ApplicationUser, string>((user, _) => createdUser = user)
+            .ReturnsAsync(IdentityResult.Success);
+
+        userManagerMock
+            .Setup(x => x.AddToRoleAsync(It.IsAny<ApplicationUser>(), "User"))
+            .ReturnsAsync(IdentityResult.Success);
+
+        userManagerMock
+            .Setup(x => x.GetRolesAsync(It.IsAny<ApplicationUser>()))
+            .ReturnsAsync(new List<string> { "User" });
+
+        userManagerMock
+            .Setup(x => x.FindByIdAsync(It.IsAny<string>()))
+            .ReturnsAsync(() => createdUser);
+
+        var sut = new IdentityService(userManagerMock.Object, signInManagerMock.Object, jwtOptions);
+
+        var registerResponse = await sut.RegisterAsync(new RegisterUserRequest(
+            "Jane Refresh",
+            "jane.refresh@trezze.com",
+            "Str0ng@Pass"));
+
+        var refreshResponse = await sut.RefreshLoginAsync(
+            new RefreshLoginRequest(registerResponse.RefreshToken));
+
+        refreshResponse.UserId.Should().Be(registerResponse.UserId);
+        refreshResponse.AccessToken.Should().NotBeNullOrWhiteSpace();
+        refreshResponse.RefreshToken.Should().NotBeNullOrWhiteSpace();
+    }
+
     private static IOptions<JwtOptions> CreateJwtOptions()
     {
         return Options.Create(new JwtOptions

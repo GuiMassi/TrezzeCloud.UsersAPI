@@ -8,7 +8,6 @@
     <Project Path="src/TrezzeCloud.Users.Infrastructure/TrezzeCloud.Users.Infrastructure.csproj" Id="6a892223-08a9-4583-a1d6-50ea94efc9af" />
   </Folder>
   <Folder Name="/tests/">
-    <Project Path="tests/TrezzeCloud.Users.Tests/TrezzeCloud.Users.Tests.csproj" Id="4c08ee8e-7f87-4f66-a968-bb728b0a748e" />
     <Project Path="tests/TrezzeCloud.Users.UnitTests/TrezzeCloud.Users.UnitTests.csproj" />
   </Folder>
 </Solution>

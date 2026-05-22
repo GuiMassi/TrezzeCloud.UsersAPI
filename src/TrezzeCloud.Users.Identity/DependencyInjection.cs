@@ -34,6 +34,9 @@ public static class DependencyInjection
         services.Configure<AdminUserOptions>(
         configuration.GetSection(AdminUserOptions.SectionName));
 
+        services.Configure<TestUserOptions>(
+            configuration.GetSection(TestUserOptions.SectionName));
+
         services
             .AddIdentity<ApplicationUser, IdentityRole<Guid>>()
             .AddEntityFrameworkStores<UsersIdentityDbContext>()
@@ -88,6 +91,10 @@ public static class DependencyInjection
             .GetRequiredService<IOptions<AdminUserOptions>>()
             .Value;
 
+        var testUserOptions = scope.ServiceProvider
+            .GetRequiredService<IOptions<TestUserOptions>>()
+            .Value;
+
         foreach (var role in Enum.GetNames<UserRoleEnum>())
         {
             if (!await roleManager.RoleExistsAsync(role))
@@ -119,6 +126,40 @@ public static class DependencyInjection
         if (!await userManager.IsInRoleAsync(admin, UserRoleEnum.Admin.ToString()))
         {
             await userManager.AddToRoleAsync(admin, UserRoleEnum.Admin.ToString());
+        }
+
+        var testUser = await userManager.FindByEmailAsync(testUserOptions.Email);
+
+        if (testUser is null)
+        {
+            if (!Guid.TryParse(testUserOptions.Id, out var parsedTestUserId))
+            {
+                throw new InvalidOperationException("TestUser.Id inválido na configuração.");
+            }
+
+            testUser = new ApplicationUser
+            {
+                Id = parsedTestUserId,
+                Name = testUserOptions.Name,
+                UserName = testUserOptions.Email,
+                Email = testUserOptions.Email,
+                EmailConfirmed = true
+            };
+
+            var createTestUserResult = await userManager.CreateAsync(
+                testUser,
+                testUserOptions.Password);
+
+            if (!createTestUserResult.Succeeded)
+            {
+                throw new InvalidOperationException(
+                    string.Join(" | ", createTestUserResult.Errors.Select(e => e.Description)));
+            }
+        }
+
+        if (!await userManager.IsInRoleAsync(testUser, UserRoleEnum.User.ToString()))
+        {
+            await userManager.AddToRoleAsync(testUser, UserRoleEnum.User.ToString());
         }
     }
 }

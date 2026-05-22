@@ -2,6 +2,7 @@
 using System.Security.Claims;
 using System.Text;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using TrezzeCloud.Users.Application.Abstractions;
@@ -73,6 +74,67 @@ public sealed class IdentityService : IIdentityService
         return await GenerateAuthResponseAsync(user);
     }
 
+    public async Task<AuthResponse> RefreshLoginAsync(RefreshLoginRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.RefreshToken))
+            throw new UnauthorizedAccessException("Refresh token inválido.");
+
+        var principal = GetPrincipalFromRefreshToken(request.RefreshToken);
+
+        var userId = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value
+            ?? principal.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
+
+        if (string.IsNullOrWhiteSpace(userId))
+            throw new UnauthorizedAccessException("Refresh token inválido.");
+
+        var user = await _userManager.FindByIdAsync(userId);
+
+        if (user is null)
+            throw new UnauthorizedAccessException("Usuário não encontrado para o refresh token informado.");
+
+        return await GenerateAuthResponseAsync(user);
+    }
+
+    public async Task<IReadOnlyList<UserAdminResponse>> GetUsersAsync()
+    {
+        var users = await _userManager.Users
+            .OrderBy(x => x.Email)
+            .ToListAsync();
+
+        var result = new List<UserAdminResponse>(users.Count);
+
+        foreach (var user in users)
+        {
+            var roles = await _userManager.GetRolesAsync(user);
+
+            result.Add(new UserAdminResponse(
+                user.Id,
+                user.Name,
+                user.Email ?? string.Empty,
+                user.EmailConfirmed,
+                roles.ToList()));
+        }
+
+        return result;
+    }
+
+    public async Task<UserAdminResponse?> GetUserByIdAsync(Guid id)
+    {
+        var user = await _userManager.FindByIdAsync(id.ToString());
+
+        if (user is null)
+            return null;
+
+        var roles = await _userManager.GetRolesAsync(user);
+
+        return new UserAdminResponse(
+            user.Id,
+            user.Name,
+            user.Email ?? string.Empty,
+            user.EmailConfirmed,
+            roles.ToList());
+    }
+
     private async Task<AuthResponse> GenerateAuthResponseAsync(ApplicationUser user)
     {
         var roles = await _userManager.GetRolesAsync(user);
@@ -105,7 +167,7 @@ public sealed class IdentityService : IIdentityService
 
         var accessToken = new JwtSecurityTokenHandler().WriteToken(token);
 
-        var refreshToken = Convert.ToBase64String(Guid.NewGuid().ToByteArray());
+        var refreshToken = GenerateRefreshToken(user, roles);
 
         return new AuthResponse(
             user.Id,
@@ -113,5 +175,66 @@ public sealed class IdentityService : IIdentityService
             user.Email ?? string.Empty,
             accessToken,
             refreshToken);
+    }
+
+    private string GenerateRefreshToken(ApplicationUser user, IEnumerable<string> roles)
+    {
+        var claims = new List<Claim>
+        {
+            new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+            new(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            new("token_type", "refresh")
+        };
+
+        claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
+
+        var key = new SymmetricSecurityKey(
+            Encoding.UTF8.GetBytes(_jwtOptions.SecretKey));
+
+        var credentials = new SigningCredentials(
+            key,
+            SecurityAlgorithms.HmacSha256);
+
+        var token = new JwtSecurityToken(
+            issuer: _jwtOptions.Issuer,
+            audience: _jwtOptions.Audience,
+            claims: claims,
+            expires: DateTime.UtcNow.AddDays(_jwtOptions.RefreshExpirationDays),
+            signingCredentials: credentials);
+
+        return new JwtSecurityTokenHandler().WriteToken(token);
+    }
+
+    private ClaimsPrincipal GetPrincipalFromRefreshToken(string refreshToken)
+    {
+        var validationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateIssuerSigningKey = true,
+            ValidateLifetime = true,
+            ValidIssuer = _jwtOptions.Issuer,
+            ValidAudience = _jwtOptions.Audience,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtOptions.SecretKey)),
+            ClockSkew = TimeSpan.Zero
+        };
+
+        try
+        {
+            var handler = new JwtSecurityTokenHandler();
+            var principal = handler.ValidateToken(refreshToken, validationParameters, out var validatedToken);
+
+            if (validatedToken is not JwtSecurityToken jwtToken
+                || !jwtToken.Claims.Any(x => x.Type == "token_type" && x.Value == "refresh"))
+            {
+                throw new UnauthorizedAccessException("Refresh token inválido.");
+            }
+
+            return principal;
+        }
+        catch (SecurityTokenException)
+        {
+            throw new UnauthorizedAccessException("Refresh token inválido.");
+        }
     }
 }
